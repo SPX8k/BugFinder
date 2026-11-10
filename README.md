@@ -6,11 +6,11 @@
 
 ## Download / Herunterladen
 
-[⬇️ **Windows-Installer herunterladen / Download Windows Installer**](https://github.com/SPX8k/BugFinder/releases/latest/download/BugFinder-Setup.exe)
+[⬇️ **Windows-Installer herunterladen / Download Windows Installer**](https://github.com/SPX8k/BugFinder/releases)
 
 [Alle Releases anzeigen / View all releases](https://github.com/SPX8k/BugFinder/releases)
 
-*Der Download ist verfügbar, sobald der erste Windows-Release erfolgreich erstellt und veröffentlicht wurde. / The download becomes available after the first Windows release has been built and published.*
+*Öffne die Releases-Seite und lade dort `BugFinder-Setup.exe` herunter, sobald der erste Windows-Release veröffentlicht wurde. / Open the Releases page and download `BugFinder-Setup.exe` there after the first Windows release is published.*
 
 BugFinder is an assistive static-analysis tool. Findings are leads for human review, not proof of exploitability.
 
