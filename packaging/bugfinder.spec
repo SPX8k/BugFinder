@@ -18,7 +18,7 @@ exe = EXE(
     a.datas,
     [],
     name="BugFinder",
-    version="packaging/version_info.txt",
+    version="version_info.txt",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
