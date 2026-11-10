@@ -1,9 +1,11 @@
 name: Windows release
 on:
-  workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - "v*"
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
@@ -22,9 +24,19 @@ jobs:
       - name: Build setup
         shell: cmd
         run: iscc packaging\windows\BugFinder.iss
-      - uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Publish Windows release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v0.1.0' }}
+          target_commitish: main
+          name: BugFinder v0.1.0
+          body: |
+            First Windows release of BugFinder.
+
+            Includes the standalone Windows executable and the Windows installer.
+          make_latest: true
+          overwrite_files: true
           files: |
             dist/BugFinder.exe
             dist/installer/BugFinder-Setup.exe
