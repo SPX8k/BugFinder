@@ -15,8 +15,10 @@ EXTENSIONS = {
 IGNORED = {
     ".git", ".hg", ".svn", ".venv", "venv", "node_modules", "__pycache__",
     ".pytest_cache", ".mypy_cache", ".ruff_cache", "dist", "build", "target", "vendor",
+    ".next", ".nuxt", ".idea", ".vscode", "coverage",
 }
 MAX_BYTES = 1_500_000
+MAX_FILES = 50_000
 
 RULES = [
     ("BFSEC001", "Possible hard-coded credential", "high", "medium",
@@ -43,6 +45,18 @@ RULES = [
      re.compile(r"""(?i)(?:Access-Control-Allow-Origin\s*[:=]\s*["']\*["']|cors\s*\(\s*\{\s*origin\s*:\s*["']\*["'])"""),
      "A wildcard CORS origin appears in the code.",
      "Restrict cross-origin access to the specific origins that need it."),
+    ("BFSEC007", "Unsafe object deserialization", "high", "medium",
+     re.compile(r"(?i)\bpickle\s*\.\s*loads?\s*\(|\bmarshal\s*\.\s*loads?\s*\("),
+     "Deserializing untrusted data with pickle or marshal can execute attacker-controlled code.",
+     "Do not deserialize untrusted data. Prefer a data-only format such as JSON with schema validation."),
+    ("BFSEC008", "Potentially unsafe YAML loading", "medium", "medium",
+     re.compile(r"(?i)\byaml\s*\.\s*load\s*\("),
+     "yaml.load may construct arbitrary Python objects depending on the loader.",
+     "Use yaml.safe_load for untrusted YAML input."),
+    ("BFSEC009", "Weak cryptographic hash", "low", "low",
+     re.compile(r"(?i)\b(?:md5|sha1)\s*\("),
+     "MD5 and SHA-1 are unsuitable for modern security-sensitive integrity or password use.",
+     "Use SHA-256 or a modern password-hashing algorithm when appropriate. Do not use fast hashes for passwords."),
     ("BFPERF001", "Potentially broad SQL query", "low", "low",
      re.compile(r"(?i)\bSELECT\s+\*\s+FROM\b"),
      "A SELECT * query may fetch more data than the caller needs.",
@@ -79,6 +93,7 @@ def _scan_python(path, text):
             "Correct the syntax at this location, then run the scan again.",
             str(path), max(1, exc.lineno or 1), max(1, exc.offset or 1)))
         return found
+
     for node in ast.walk(tree):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
             if node.func.id in {"eval", "exec"}:
@@ -98,11 +113,37 @@ def _scan_python(path, text):
                     "subprocess.Popen appears to enable shell execution.",
                     "Prefer argument lists with shell=False; validate inputs if shell use is unavoidable.",
                     str(path), node.lineno, node.col_offset + 1))
+            if node.func.attr == "mktemp":
+                found.append(Finding(
+                    "BFPY004", "Insecure temporary file creation", "medium", "high",
+                    "tempfile.mktemp creates a name without safely reserving the file.",
+                    "Use tempfile.NamedTemporaryFile or another API that creates the file atomically.",
+                    str(path), node.lineno, node.col_offset + 1))
+        if isinstance(node, ast.ExceptHandler) and node.type is None:
+            found.append(Finding(
+                "BFPY005", "Bare except clause", "low", "high",
+                "A bare except catches nearly every exception, including system-exiting exceptions.",
+                "Catch the specific exception types the code can handle.",
+                str(path), node.lineno, node.col_offset + 1))
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.args.defaults:
+            defaults = node.args.defaults
+            for default in defaults:
+                if isinstance(default, (ast.List, ast.Dict, ast.Set)):
+                    found.append(Finding(
+                        "BFPY006", "Mutable function default", "medium", "high",
+                        "A mutable default argument is shared between calls to this function.",
+                        "Use None as the default and create a new list, dictionary, or set inside the function.",
+                        str(path), default.lineno, default.col_offset + 1))
+                    break
     return found
 
 def iter_source_files(root: Path):
+    count = 0
     for current, dirs, names in os.walk(root, followlinks=False):
-        dirs[:] = [d for d in dirs if d not in IGNORED]
+        dirs[:] = [
+            d for d in dirs
+            if d not in IGNORED and not (Path(current) / d).is_symlink()
+        ]
         for name in names:
             candidate = Path(current) / name
             try:
@@ -113,9 +154,12 @@ def iter_source_files(root: Path):
             except OSError:
                 continue
             yield candidate
+            count += 1
+            if count >= MAX_FILES:
+                return
 
 def scan_project(root: Path):
-    root = root.resolve()
+    root = Path(root).resolve()
     if not root.exists() or not root.is_dir():
         raise ValueError(f"Project directory does not exist: {root}")
     results = []
