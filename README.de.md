@@ -4,11 +4,11 @@ BugFinder ist ein lokaler Code- und Sicherheitsanalysator. Er untersucht Projekt
 
 ## Download
 
-[⬇️ **BugFinder für Windows herunterladen (Installer)**](https://github.com/SPX8k/BugFinder/releases)
+[⬇️ **BugFinder für Windows herunterladen (Installer)**](https://github.com/SPX8k/BugFinder/releases/latest/download/BugFinder-Setup.exe)
 
 [Alle Versionen und Releases anzeigen](https://github.com/SPX8k/BugFinder/releases)
 
-*Öffne die Releases-Seite und lade dort `BugFinder-Setup.exe` herunter, sobald der erste Windows-Release veröffentlicht wurde.*
+*Der direkte Download funktioniert, sobald der Windows-Build erfolgreich abgeschlossen und der Release veröffentlicht wurde.*
 
 ## Funktionen
 - Desktop-Oberfläche mit PySide6 und Kommandozeile.
