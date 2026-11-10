@@ -13,5 +13,8 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements-build.txt
-      - run: pytest -q
+      - name: Install BugFinder package
+        run: pip install -e .
+      - name: Run tests
+        run: python -m pytest -q
       - run: ruff check bugfinder tests
