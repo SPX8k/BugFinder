@@ -525,21 +525,20 @@ class MainWindow(QMainWindow):
             "Ergebnisse durchsuchen …" if self.lang == "de" else "Search findings …"
         )
         filter_labels = [
-            ("Alle Schweregrade", "All severities"),
-            ("Kritisch", "Critical"),
-            ("Hoch", "High"),
-            ("Mittel", "Medium"),
-            ("Niedrig", "Low"),
-            ("Info", "Info"),
+            ("Alle Schweregrade", "All severities", "all"),
+            ("Kritisch", "Critical", "critical"),
+            ("Hoch", "High", "high"),
+            ("Mittel", "Medium", "medium"),
+            ("Niedrig", "Low", "low"),
+            ("Info", "Info", "info"),
         ]
         selected_filter = self.severity_filter.currentData()
         self.severity_filter.blockSignals(True)
         self.severity_filter.clear()
-        for de_label, en_label in filter_labels:
-            self.severity_filter.addItem(de_label if self.lang == "de" else en_label,
-                                         "all" if de_label.startswith("Alle") else
-                                         "all" if de_label == "All severities" else
-                                         de_label.lower() if self.lang == "de" else en_label.lower())
+        for de_label, en_label, severity_key in filter_labels:
+            self.severity_filter.addItem(
+                de_label if self.lang == "de" else en_label, severity_key
+            )
         index = self.severity_filter.findData(selected_filter)
         self.severity_filter.setCurrentIndex(max(0, index))
         self.severity_filter.blockSignals(False)
