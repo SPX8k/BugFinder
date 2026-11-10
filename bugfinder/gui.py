@@ -13,6 +13,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
     QLabel,
+    QLineEdit,
+    QPlainTextEdit,
     QMainWindow,
     QMessageBox,
     QPushButton,
@@ -213,6 +215,10 @@ class MainWindow(QMainWindow):
         self.scan_state = QLabel()
         self.scan_state.setObjectName("scanState")
         strip_layout.addWidget(self.scan_state)
+        self.history_btn = QPushButton("Verlauf" if self.lang == "de" else "History")
+        self.history_btn.setObjectName("secondaryButton")
+        self.history_btn.clicked.connect(self.show_history)
+        strip_layout.addWidget(self.history_btn)
         root.addWidget(project_strip)
 
         # Overview cards
@@ -239,6 +245,26 @@ class MainWindow(QMainWindow):
         self.results_hint.setObjectName("mutedText")
         results_header.addWidget(self.results_hint)
         root.addLayout(results_header)
+
+        filter_row = QHBoxLayout()
+        filter_row.setSpacing(10)
+        self.search_box = QLineEdit()
+        self.search_box.setObjectName("searchBox")
+        self.search_box.setClearButtonEnabled(True)
+        self.search_box.setPlaceholderText("Ergebnisse durchsuchen …")
+        self.search_box.textChanged.connect(self.apply_filters)
+        filter_row.addWidget(self.search_box, 1)
+        self.severity_filter = QComboBox()
+        self.severity_filter.setObjectName("languageBox")
+        self.severity_filter.addItem("Alle Schweregrade", "all")
+        self.severity_filter.addItem("Kritisch", "critical")
+        self.severity_filter.addItem("Hoch", "high")
+        self.severity_filter.addItem("Mittel", "medium")
+        self.severity_filter.addItem("Niedrig", "low")
+        self.severity_filter.addItem("Info", "info")
+        self.severity_filter.currentIndexChanged.connect(self.apply_filters)
+        filter_row.addWidget(self.severity_filter)
+        root.addLayout(filter_row)
 
         self.results_panel = QFrame()
         self.results_panel.setObjectName("resultsPanel")
@@ -267,6 +293,27 @@ class MainWindow(QMainWindow):
         self.table.setColumnWidth(5, 260)
         panel_layout.addWidget(self.table)
         root.addWidget(self.results_panel, 1)
+
+        self.detail_panel = QFrame()
+        self.detail_panel.setObjectName("detailPanel")
+        detail_layout = QVBoxLayout(self.detail_panel)
+        detail_layout.setContentsMargins(16, 12, 16, 12)
+        detail_layout.setSpacing(7)
+        self.detail_title = QLabel("Fundstelle auswählen" if self.lang == "de" else "Select a finding")
+        self.detail_title.setObjectName("sectionTitle")
+        self.detail_text = QPlainTextEdit()
+        self.detail_text.setObjectName("detailText")
+        self.detail_text.setReadOnly(True)
+        self.detail_text.setMaximumHeight(105)
+        self.detail_text.setPlainText(
+            "Wähle einen Eintrag aus der Tabelle, um Erklärung und Lösungsvorschlag zu sehen."
+            if self.lang == "de" else
+            "Select a row to view its explanation and recommendation."
+        )
+        detail_layout.addWidget(self.detail_title)
+        detail_layout.addWidget(self.detail_text)
+        root.addWidget(self.detail_panel)
+        self.table.itemSelectionChanged.connect(self.show_finding_details)
 
         # Footer / progress
         footer = QHBoxLayout()
@@ -328,6 +375,16 @@ class MainWindow(QMainWindow):
                 padding: 9px 12px; min-height: 20px;
             }
             QComboBox:hover { border-color: #39bde7; }
+            QLineEdit#searchBox, QPlainTextEdit#detailText {
+                color: #e4f1fb; background: #111e2c;
+                border: 1px solid #2a4057; border-radius: 9px;
+                padding: 9px 11px; selection-background-color: #17658a;
+            }
+            QLineEdit#searchBox:focus { border-color: #36b9df; }
+            QFrame#detailPanel {
+                background: #101c2a; border: 1px solid #263c52; border-radius: 12px;
+            }
+            QPlainTextEdit#detailText { border: 0; padding: 2px; }
             QComboBox QAbstractItemView {
                 color: #eaf4ff; background: #172435;
                 selection-background-color: #174c69;
@@ -463,6 +520,36 @@ class MainWindow(QMainWindow):
         self.results_hint.setText(
             "Einträge werden lokal angezeigt" if self.lang == "de" else "Findings stay on this device"
         )
+        self.history_btn.setText("Verlauf" if self.lang == "de" else "History")
+        self.search_box.setPlaceholderText(
+            "Ergebnisse durchsuchen …" if self.lang == "de" else "Search findings …"
+        )
+        filter_labels = [
+            ("Alle Schweregrade", "All severities"),
+            ("Kritisch", "Critical"),
+            ("Hoch", "High"),
+            ("Mittel", "Medium"),
+            ("Niedrig", "Low"),
+            ("Info", "Info"),
+        ]
+        selected_filter = self.severity_filter.currentData()
+        self.severity_filter.blockSignals(True)
+        self.severity_filter.clear()
+        for de_label, en_label in filter_labels:
+            self.severity_filter.addItem(de_label if self.lang == "de" else en_label,
+                                         "all" if de_label.startswith("Alle") else
+                                         "all" if de_label == "All severities" else
+                                         de_label.lower() if self.lang == "de" else en_label.lower())
+        index = self.severity_filter.findData(selected_filter)
+        self.severity_filter.setCurrentIndex(max(0, index))
+        self.severity_filter.blockSignals(False)
+        self.detail_title.setText("Fundstelle auswählen" if self.lang == "de" else "Select a finding")
+        if not self.table.selectedItems():
+            self.detail_text.setPlainText(
+                "Wähle einen Eintrag aus der Tabelle, um Erklärung und Lösungsvorschlag zu sehen."
+                if self.lang == "de" else
+                "Select a row to view its explanation and recommendation."
+            )
         self.table.setHorizontalHeaderLabels([
             t["severity"], t["rule"], t["file"], t["line"],
             t["confidence"], t["message"], t["fix"]
@@ -559,6 +646,7 @@ class MainWindow(QMainWindow):
 
         self.table.resizeRowsToContents()
         self.table.setSortingEnabled(True)
+        self.apply_filters()
         self.progress.setRange(0, 100)
         self.progress.setValue(100)
         self.progress_text.setText("100%")
