@@ -1,8 +1,8 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QEasingCurve, Property, QPropertyAnimation, Qt, QThread, Signal
-from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPainterPath, QPen
+from PySide6.QtCore import QEasingCurve, QPropertyAnimation, Qt, QThread, Signal
+from PySide6.QtGui import QColor, QLinearGradient, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
