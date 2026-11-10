@@ -4,6 +4,14 @@
 
 **English:** BugFinder is a local code and security analyzer that detects programming errors, potential security issues, and problematic code patterns while providing clear recommendations.
 
+## Download / Herunterladen
+
+[⬇️ **Windows-Installer herunterladen / Download Windows Installer**](https://github.com/SPX8k/BugFinder/releases/latest/download/BugFinder-Setup.exe)
+
+[Alle Releases anzeigen / View all releases](https://github.com/SPX8k/BugFinder/releases)
+
+*Der Download ist verfügbar, sobald der erste Windows-Release erfolgreich erstellt und veröffentlicht wurde. / The download becomes available after the first Windows release has been built and published.*
+
 BugFinder is an assistive static-analysis tool. Findings are leads for human review, not proof of exploitability.
 
 ## Features
@@ -23,7 +31,7 @@ Python 3.11+ is required.
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\activate
+.venv\\Scripts\\activate
 pip install -r requirements.txt
 python run_gui.py
 ```
