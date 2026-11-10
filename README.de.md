@@ -2,6 +2,14 @@
 
 BugFinder ist ein lokaler Code- und Sicherheitsanalysator. Er untersucht Projekte auf Programmierfehler, potenzielle Sicherheitsprobleme und problematische Code-Muster. Jede Fundstelle enthält Datei, Zeile, Regel-ID, Schweregrad, Konfidenz, Erklärung und Verbesserungsvorschlag.
 
+## Download
+
+[⬇️ **BugFinder für Windows herunterladen (Installer)**](https://github.com/SPX8k/BugFinder/releases/latest/download/BugFinder-Setup.exe)
+
+[Alle Versionen und Releases anzeigen](https://github.com/SPX8k/BugFinder/releases)
+
+*Der Download funktioniert, sobald der erste Windows-Release erfolgreich erstellt und veröffentlicht wurde.*
+
 ## Funktionen
 - Desktop-Oberfläche mit PySide6 und Kommandozeile.
 - Lokale, schreibgeschützte Analyse; untersuchter Code wird weder ausgeführt noch hochgeladen.
@@ -12,14 +20,16 @@ BugFinder ist ein lokaler Code- und Sicherheitsanalysator. Er untersucht Projekt
 
 ## Starten
 Python 3.11 oder neuer:
+
 ```powershell
 python -m venv .venv
-.venv\Scripts\activate
+.venv\\Scripts\\activate
 pip install -r requirements.txt
 python run_gui.py
 ```
 
 CLI:
+
 ```powershell
 python -m bugfinder scan . --format html --output bericht.html
 ```
@@ -29,6 +39,7 @@ python -m bugfinder scan . --format html --output bericht.html
 pip install -r requirements-build.txt
 pyinstaller --noconfirm --clean packaging/bugfinder.spec
 ```
+
 Anschließend `packaging/windows/BugFinder.iss` mit Inno Setup 6 kompilieren.
 
 ## Grenzen
